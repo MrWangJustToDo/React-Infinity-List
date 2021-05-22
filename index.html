@@ -87,6 +87,7 @@
       class List extends Component {
         constructor(props) {
           super(props);
+          this.hover = false;
           this.totalHeight = 0;
           this.avarageHeight = 0;
           this.totalElement = [];
@@ -130,6 +131,15 @@
           this.setState({
             allHeight: temp,
           });
+        };
+
+        mouseIn = () => {
+          this.hover = true;
+        };
+
+        mouseOut = () => {
+          this.hover = false;
+          requestIdleCallback(this.autoInit);
         };
 
         displayRange = (startIndex, endIndex, container) => {
@@ -198,21 +208,23 @@
         autoInit = () => {
           const { list } = this.props;
           const { needUpdate, allLength } = this.state;
-          if (needUpdate && list.length > allLength) {
-            if (allLength + this.displayLength < list.length) {
-              this.setState((last) => ({
-                allLength: last.allLength + this.displayLength,
-              }));
+          if (!this.hover) {
+            if (needUpdate && list.length > allLength) {
+              if (allLength + this.displayLength < list.length) {
+                this.setState((last) => ({
+                  allLength: last.allLength + this.displayLength,
+                }));
+              } else {
+                this.setState((last) => ({
+                  needUpdate: false,
+                  allLength: list.length,
+                }));
+              }
+              this.initAvarage();
+              requestIdleCallback(this.autoInit);
             } else {
-              this.setState((last) => ({
-                needUpdate: false,
-                allLength: list.length,
-              }));
+              this.initTotal();
             }
-            this.initAvarage();
-            requestIdleCallback(this.autoInit);
-          } else {
-            this.initTotal();
           }
         };
 
@@ -242,7 +254,12 @@
           return (
             <>
               <h3>{this.avarageHeight}</h3>
-              <div id="outer" onScroll={this.scrollEve}>
+              <div
+                id="outer"
+                onScroll={this.scrollEve}
+                onMouseEnter={this.mouseIn}
+                onMouseLeave={this.mouseOut}
+              >
                 <div
                   id="inner"
                   ref={this.container}
